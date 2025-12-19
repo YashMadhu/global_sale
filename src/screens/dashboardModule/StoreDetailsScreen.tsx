@@ -7,7 +7,7 @@ import Colors from '../../constants/Colors'
 import HeaderComponent from '../../components/HeaderComponent'
 import fonts from '../../assets/fonts'
 
-const StoreDetailsScreen = ({navigation, route}: any) => {
+const StoreDetailsScreen = ({ navigation, route }: any) => {
   const { store } = route.params
   const [storeDetails, setStoreDetails] = useState<any>(null)
 
@@ -21,7 +21,7 @@ const StoreDetailsScreen = ({navigation, route}: any) => {
       showErrorToast('Store ID is missing.')
       return
     }
-    
+
     getData(`${ENDPOINTS.stores}/${storeId}`)
       .then((response) => {
         setStoreDetails(response?.data || null)
@@ -30,61 +30,62 @@ const StoreDetailsScreen = ({navigation, route}: any) => {
         showErrorToast('Failed to fetch store details.')
       })
   }
-  
-  const statusBarHeight = Platform.OS === 'android' 
-    ? StatusBar.currentHeight || 0 
-    : Platform.OS === 'ios' 
-    ? 44 
-    : 0
+
+  const statusBarHeight = Platform.OS === 'android'
+    ? StatusBar.currentHeight || 0
+    : Platform.OS === 'ios'
+      ? 44
+      : 0
 
   return (
     <View style={styles.container}>
-      <StatusBar translucent={true} backgroundColor={'transparent'} barStyle={'light-content'}/>
+      <StatusBar translucent={true} backgroundColor={'transparent'} barStyle={'light-content'} />
       {storeDetails?.image && (
         <ImageBackground
           source={{ uri: storeDetails.image }}
           style={[styles.storeImage, { marginTop: -statusBarHeight, paddingTop: statusBarHeight }]}
         >
-      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerContainer}>
-          <Image source={require('../../assets/icons/back.png')} style={{
-            width: 24,
-            height: 24,
-            tintColor: Colors.white,
-          }} />
-      </TouchableOpacity>
-      <View style={styles.storeDetailsContainer}>
-      <Text style={styles.itemNameStyle}>{storeDetails.name}</Text>
-      <Text style={styles.typeTextStyle}>{storeDetails.category}</Text>
-      </View>
-    </ImageBackground>
-  )}
-  {storeDetails && (
-    <View style={{    paddingHorizontal: 20,
-    }}>
-    <View style={styles.storeInfoContainer}>
-      <Text style={styles.storeLabel}>Store</Text>
-      <View style={styles.locationContainer}>
-        <Image 
-          source={require('../../assets/icons/ic_location.png')} 
-          style={styles.locationIcon}
-        />
-        <Text style={styles.locationText}>
-          {storeDetails?.location?.address}
-        </Text>
-      </View>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerContainer}>
+            <Image source={require('../../assets/icons/back.png')} style={{
+              width: 24,
+              height: 24,
+              tintColor: Colors.white,
+            }} />
+          </TouchableOpacity>
+          <View style={styles.storeDetailsContainer}>
+            <Text style={styles.itemNameStyle}>{storeDetails.name}</Text>
+            <Text style={styles.typeTextStyle}>{storeDetails.category}</Text>
+          </View>
+        </ImageBackground>
+      )}
+      {storeDetails && (
+        <View style={{
+          paddingHorizontal: 20,
+        }}>
+          <View style={styles.storeInfoContainer}>
+            <Text style={styles.storeLabel}>Store</Text>
+            <View style={styles.locationContainer}>
+              <Image
+                source={require('../../assets/icons/ic_location.png')}
+                style={styles.locationIcon}
+              />
+              <Text style={styles.locationText}>
+                {storeDetails?.location?.address}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.mapContainer}>
+            <Text style={styles.mapLabel}>Map</Text>
+            <Image
+              source={require('../../assets/images/map_image.png')}
+              style={styles.mapImage}
+              resizeMode="cover"
+            />
+          </View>
+        </View>
+      )}
     </View>
-    <View style={styles.mapContainer}>
-      <Text style={styles.mapLabel}>Map</Text>
-        <Image 
-          source={require('../../assets/images/map_image.png')} 
-          style={styles.mapImage}
-          resizeMode="cover"
-        />
-    </View>
-    </View>
-  )}
-</View>
-);
+  );
 };
 
 export default StoreDetailsScreen;
@@ -105,7 +106,7 @@ const styles = StyleSheet.create({
     top: 40,
     left: 0,
     right: 0,
-    zIndex: 1000,   
+    zIndex: 1000,
   },
   storeDetailsContainer: {
     alignItems: 'center',

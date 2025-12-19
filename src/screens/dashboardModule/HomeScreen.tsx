@@ -14,7 +14,7 @@ import Svg, { ClipPath, Defs, LinearGradient, Path,  Image as SvgImage,
 import ShimmerPlaceholder from 'react-native-shimmer-placeholder'
 // import SvgImage from 'react-native-svg/lib/typescript/elements/Image'
 
-const { width } = Dimensions.get('window')
+const { width, height } = Dimensions.get('window')
 
 const CARD_WIDTH = 320;
 const CARD_HEIGHT = 200;
@@ -101,10 +101,10 @@ const HomeScreen = ({ navigation }: any) => {
 <View style={{ width: 190, height: 188,}}>
 
 
-<Svg width={190} height={188} >
+<Svg width={190} height={188}   >
   <Defs>
     <ClipPath id="clip">
-      <Path d="M0 0h186.306C188.417 0 190 2.53 190 5.901v73.346c0 59.856-1.583 58.17-32.722 58.17h-55.417c-21.111 0-.528 50.583-22.694 50.583H4.222C1.583 185.471 0 182.942 0 177.04V5.901C0 2.53 1.583 0 3.694 0H0Z" />
+      <Path d="M0 31.9948C0.0436464 0.0159585 0.0436456 0.0159592 18.7845 0.00278607H170.718C189.959 -0.0329697 189.962 -0.0800168 190.025 24.2904V74.7671C190.055 140.203 190.055 139.262 169.613 140.203H97.2376C75.121 139.619 97.2376 187.989 74.3751 187.989H19.337C0 188.191 0 188.191 0 153.376V31.9948Z" />
     </ClipPath>
   </Defs>
 
@@ -121,15 +121,18 @@ const HomeScreen = ({ navigation }: any) => {
 </Svg>
 <TouchableOpacity style={{
   position: 'absolute',
-  right: 0,
-  bottom: -0,
+  right: width * 0.01,
+  bottom: height * 0.0001,
   backgroundColor: Colors.primary,
-  paddingHorizontal: 10,
-  paddingVertical: 12,
-  borderRadius: 12,
+  paddingHorizontal: width * 0.04                       ,
+  paddingVertical: height * 0.015,
+  borderRadius: width * 0.03,
   elevation: 4,
-}}>
-  <Text style={{ color:     Colors.white }}>View Store</Text>
+}}
+
+onPress={() => navigation.navigate(ScreenName.StoreDetails, { store: item })}
+>
+  <Text style={{ color: Colors.white, fontSize: width * 0.032 }}>View Store</Text>
 </TouchableOpacity>
 </View>
   )
@@ -210,7 +213,7 @@ const HomeScreen = ({ navigation }: any) => {
           horizontal
           showsHorizontalScrollIndicator={false}
           ItemSeparatorComponent={() => <View style={{ height: 20 }} />}
-          contentContainerStyle={{ paddingStart: 20, marginTop: 15 }}
+          contentContainerStyle={{ marginTop: 15 ,paddingHorizontal:15}}
           data={[...Array(3).keys()]}
           renderItem={renderShimmerItem}
           removeClippedSubviews={false}
@@ -223,7 +226,7 @@ const HomeScreen = ({ navigation }: any) => {
           keyExtractor={(_, index) => index.toString()}
           showsHorizontalScrollIndicator={false}
           style={{ marginTop: 10 }}
-          contentContainerStyle={{ gap: 10, paddingStart: 20 }}
+          contentContainerStyle={{ gap: 10, paddingStart: 20,paddingHorizontal:15 }}
         />
         </View>
         }

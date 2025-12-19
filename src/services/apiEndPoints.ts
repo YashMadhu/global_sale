@@ -5,3 +5,19 @@ export const ENDPOINTS = {
   statistics:'statistics',
   notifications:'notifications'
 }
+
+export const STATUS_CODES = {
+  SUCCESS: 200,
+  CREATED: 201,
+  BAD_REQUEST: 400,
+  UNAUTHORIZED: 401,
+  FORBIDDEN: 403,
+  NOT_FOUND: 404,
+  INTERNAL_SERVER_ERROR: 500,
+}
+
+export const ERROR_MESSAGES = {
+  [STATUS_CODES.UNAUTHORIZED]: 'Invalid or expired token',
+  [STATUS_CODES.INTERNAL_SERVER_ERROR]: 'Internal Server Error',
+  DEFAULT: 'Something went wrong. Please try again.',
+}

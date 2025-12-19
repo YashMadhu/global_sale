@@ -11,7 +11,9 @@ const ProfileScreen = ({navigation}: any) => {
 
   const handleLogout = async () => {
     setShowLogoutModal(false)
-    await AsyncStorage.removeItem('bearerToken')
+    await AsyncStorage.clear()
+    await AsyncStorage.setItem('bearerToken', '')
+    await AsyncStorage.setItem('isLoggedIn', 'false')
     navigation.reset({
       index: 0,
       routes: [{ name: ScreenName.Login }],
@@ -197,7 +199,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 12,
     borderRadius: 8,
-    backgroundColor: Colors.red,
+    backgroundColor: Colors.primary,
     alignItems: 'center',
   },
   modalButtonYesText: {

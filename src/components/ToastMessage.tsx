@@ -13,7 +13,7 @@ const ToastMessage = () => {
       <BaseToast
         {...props}
         text2NumberOfLines={NUMBER_OF_TOAST_MESSAGE_LINES}
-        style={[styles.toastErrorStyle, styles.toastStyle]}
+        style={[styles.toastErrorStyle, styles.toastStyle,{paddingHorizontal:10}]}
         contentContainerStyle={[styles.toastContentContainer,{height:'100%'}]}
         text2Style={[styles.toastMessage,{color:Colors.error}]}
       />

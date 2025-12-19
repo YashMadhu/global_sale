@@ -1,11 +1,11 @@
-import React, { use, useEffect, useRef, useState } from 'react'
-import { Image, StyleSheet, Text, TextInput, Touchable, TouchableOpacity, View } from 'react-native'
+import React, { useRef, useState } from 'react'
+import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator } from 'react-native'
 import AppTextInput from '../../components/TextInputComponent'
 import Colors from '../../constants/Colors'
 import { Screen } from 'react-native-screens'
 import { ScreenName } from '../../navigation/Screenname'
 import fonts from '../../assets/fonts'
-import { showErrorToast } from '../../components/ToastMessage'
+import { showErrorToast, showSuccessToast } from '../../components/ToastMessage'
 import { postData } from '../../services/apiServices'
 import { ENDPOINTS } from '../../services/apiEndPoints'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -15,8 +15,9 @@ const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState<string>('user1')
   const [password, setPassword] = useState<string>('password')
   const [isPasswordVisible, setIsPasswordVisible] = useState<boolean>(false)
+  const [isLoading, setIsLoading] = useState<boolean>(false)
 
-    const emailRef = useRef<TextInput>(null)
+  const emailRef = useRef<TextInput>(null)
   const passwordRef = useRef<TextInput>(null)
 
   const onPressLogin = () => {
@@ -43,14 +44,18 @@ const LoginScreen = ({ navigation }) => {
       password: password
 
     }
+    setIsLoading(true)
     postData(ENDPOINTS.login, payload).then(async (response) => {
       console.log('response', response);
       await AsyncStorage.setItem('bearerToken', response.token);
       await AsyncStorage.setItem('isLoggedIn', 'true');
+      setIsLoading(false)
+      showSuccessToast('Login successful!')
       navigation.replace(ScreenName.BottomTab)
     }).catch((error) => {
       console.log('error', error);
-      showErrorToast('Login failed. Please try again.')
+      setIsLoading(false)
+      showErrorToast(error.message)
     })
   }
 
@@ -62,19 +67,19 @@ const LoginScreen = ({ navigation }) => {
         style={{ width: '100%', height: 200, resizeMode: 'contain', marginBottom: 30 }}
       />
       <AppTextInput
-                      inputRef={emailRef}
+        inputRef={emailRef}
 
         sourceLeft={require('../../assets/icons/mail.png')}
         placeholder='Email or Mobile Number'
         value={email}
         keyboardType='email-address'
-                onChangeText={setEmail}
-                returnKeyType='next'
-                blurOnSubmit={false}
-                onSubmitEditing={() => passwordRef.current?.focus()}
+        onChangeText={setEmail}
+        returnKeyType='next'
+        blurOnSubmit={false}
+        onSubmitEditing={() => passwordRef.current?.focus()}
       />
       <AppTextInput
-                      inputRef={passwordRef}
+        inputRef={passwordRef}
 
         sourceLeft={require('../../assets/icons/lock.png')}
         placeholder='Password'
@@ -86,8 +91,10 @@ const LoginScreen = ({ navigation }) => {
 
       <TouchableOpacity
         style={styles.loginButtonStyle}
-        onPress={() => onPressLogin()}>
+        onPress={() => onPressLogin()}
+        disabled={isLoading}>
         <Text style={{ color: Colors.white, fontFamily: fonts.PlusJakartaSansSemiBold }}>Login</Text>
+        {isLoading && <ActivityIndicator color={Colors.white} style={{ marginRight: 10 }} />}
       </TouchableOpacity>
     </View>
   )
@@ -105,7 +112,8 @@ const styles = StyleSheet.create({
   },
   loginButtonStyle: {
     backgroundColor: Colors.primary, paddingHorizontal: 15,
-    paddingVertical:15, marginTop: 20, alignItems: 'center', borderRadius: 25
+    paddingVertical: 15, marginTop: 20, alignItems: 'center', borderRadius: 25,
+    flexDirection: 'row', justifyContent: 'center'
   }
 })
 
