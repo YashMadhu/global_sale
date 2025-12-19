@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { StyleSheet, View, FlatList, ImageBackground, Text, Dimensions, TouchableOpacity } from 'react-native'
+import { StyleSheet, View, FlatList, ImageBackground, Text, Dimensions, TouchableOpacity, Image as RNImage } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import Colors from '../../constants/Colors'
 import HeaderComponent from '../../components/HeaderComponent'
 import fonts from '../../assets/fonts'
@@ -8,28 +9,32 @@ import { ENDPOINTS } from '../../services/apiEndPoints'
 import { showErrorToast } from '../../components/ToastMessage'
 import { ScreenName } from '../../navigation/Screenname'
 import Svg, { ClipPath, Defs, Image, Path } from 'react-native-svg'
+import SkeletonPlaceholder from 'react-native-skeleton-placeholder'
 
 const { width, height } = Dimensions.get('window')
 
-const StoreListScreen = ({ navigation }) => {
+const StoreListScreen = ({ navigation }: any) => {
   const [storeList, setStoreList] = useState([])
+  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
     getStoreList()
   }, [])
 
   const getStoreList = () => {
+    setIsLoading(true)
     getData(ENDPOINTS.stores)
       .then((response) => {
         setStoreList(response?.data || [])
+        setIsLoading(false)
       })
       .catch(() => {
         showErrorToast('Failed to fetch stores.')
+        setIsLoading(false)
       })
   }
 
-  const renderStoreItem = ({ item }) => (
- 
+  const renderStoreItem = ({ item }: { item: any }) => (
     <View style={styles.storeCardContainer}>
       <Svg 
         width={width - 40}
@@ -57,24 +62,46 @@ const StoreListScreen = ({ navigation }) => {
       >
         <Text style={styles.viewStoreButtonText}>View Store</Text>
       </TouchableOpacity>
+
+      <Text style={styles.itemNameStyle} numberOfLines={1}>
+        {item?.name}
+      </Text>
+      <View style={styles.categoryRow}>
+        <Text style={styles.typeTextStyle} numberOfLines={1}>
+          {item?.category}
+        </Text>
+        <RNImage
+          source={require('../../assets/images/rating_image.png')}
+          style={styles.ratingImage}
+        />
+      </View>
     </View>
   );
 
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <HeaderComponent
         showBackButton
         title="Stores" />
-      <FlatList
-        data={storeList}
-        renderItem={renderStoreItem}
-        // contentContainerStyle={{ paddingHorizontal: 20,alignItems: 'center', justifyContent: 'center' }}
-        keyExtractor={(item, index) => index.toString()}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.listContainer}
-      />
-    </View>
+      {isLoading ? (
+        <SkeletonPlaceholder>
+          <View style={styles.shimmerListContainer}>
+            {[...Array(4).keys()].map((index) => (
+              <View key={index} style={styles.shimmerCard} />
+            ))}
+          </View>
+        </SkeletonPlaceholder>
+      ) : (
+        <FlatList
+          data={storeList}
+          renderItem={renderStoreItem}
+          keyExtractor={(item, index) => index.toString()}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.listContainer}
+        />
+      )}
+    </SafeAreaView>
   )
 }
 
@@ -96,7 +123,7 @@ const styles = StyleSheet.create({
   storeCardContainer: {
     width: CARD_WIDTH,
     height: CARD_HEIGHT + 20,
-    marginBottom: 20,
+    marginBottom: 50,
   },
   viewStoreButton: {
     position: 'absolute',
@@ -113,12 +140,9 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
   },
   viewStoreButtonText: {
-    color: 'white',
+    color: Colors.white,
     fontFamily: fonts.PlusJakartaSansRegular,
     fontSize: width * 0.038,
-  },
-  storeItemSyle: {
-    marginBottom: 20,
   },
   storeContainer: {
     width: '100%',
@@ -136,11 +160,31 @@ const styles = StyleSheet.create({
   itemNameStyle: {
     fontSize: 16,
     fontFamily: fonts.PlusJakartaSansSemiBold,
-    marginTop: 15
+    marginTop: 5
   },
   typeTextStyle: {
-    fontSize: 14,
+    fontSize: 13,
     fontFamily: fonts.PlusJakartaSansRegular,
-    color: Colors.gray
-  }
+    color: Colors.darkGray,
+  },
+  categoryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  ratingImage: {
+    width: 80,
+    height: 26,
+    resizeMode: 'contain',
+  },
+  shimmerListContainer: {
+    paddingTop: 20,
+    paddingBottom: 20,
+  },
+  shimmerCard: {
+    width: CARD_WIDTH,
+    height: CARD_HEIGHT + 20,
+    borderRadius: 20,
+    marginBottom: 20,
+  },
 })

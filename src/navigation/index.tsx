@@ -22,8 +22,10 @@ const Tab = createBottomTabNavigator();
 const BottomTabs: React.FC = () => {
 
   const TabIcon = ({ source, label, focused }) => (
-    <View style={{ alignItems: 'center', flexDirection: 'row', justifyContent: 'center',
- paddingTop: 0, backgroundColor: focused ? Colors.primary : Colors.white, width: 120, height: 50, borderRadius: 30, marginTop: 10 }}>
+    <View style={{
+      alignItems: 'center', flexDirection: 'row', justifyContent: 'center',
+      paddingTop: 0, backgroundColor: focused ? Colors.primary : Colors.white, width: 120, height: 50, borderRadius: 30, marginTop: 10
+    }}>
       <Image
         source={source}
         style={{
@@ -40,7 +42,7 @@ const BottomTabs: React.FC = () => {
           color: focused ? Colors.white : Colors.gray,
           textAlign: 'center',
           marginStart: 10,
-          fontFamily:fonts.PlusJakartaSansMedium
+          fontFamily: fonts.PlusJakartaSansMedium
         }}
       >
         {label}
@@ -58,7 +60,7 @@ const BottomTabs: React.FC = () => {
         tabBarShowLabel: false,
         tabBarStyle: {
           height: 60,
-          paddingTop:5,
+          paddingTop: 5,
         },
 
         tabBarIcon: ({ focused }) => {
@@ -79,7 +81,7 @@ const BottomTabs: React.FC = () => {
             />
           )
         }
-       
+
       })}>
       <Tab.Screen name={ScreenName.Home} component={HomeScreen} />
       <Tab.Screen name={ScreenName.Profile} component={ProfileScreen} />
@@ -117,10 +119,10 @@ export const AppNavigator = () => {
           component={BottomTabs}
           options={{ headerShown: false }}
         />
-      <Stack.Screen name={ScreenName.StoreList} component={StoreListScreen} />
-      <Stack.Screen name={ScreenName.StoreDetails} component={StoreDetailsScreen} />
-      <Stack.Screen name={ScreenName.AudioRecording} component={AudioRecordingScreen} />
-      <Stack.Screen name={ScreenName.ManageNotifications} component={ManageNotificationsScreen} />
+        <Stack.Screen name={ScreenName.StoreList} component={StoreListScreen} />
+        <Stack.Screen name={ScreenName.StoreDetails} component={StoreDetailsScreen} />
+        <Stack.Screen name={ScreenName.AudioRecording} component={AudioRecordingScreen} />
+        <Stack.Screen name={ScreenName.ManageNotifications} component={ManageNotificationsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

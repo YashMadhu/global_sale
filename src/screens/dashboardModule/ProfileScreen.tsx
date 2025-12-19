@@ -1,12 +1,13 @@
 import React, { useState } from 'react'
 import { Image, StyleSheet, Text, TouchableOpacity, View, Modal } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import HeaderComponent from '../../components/HeaderComponent'
 import Colors from '../../constants/Colors'
 import fonts from '../../assets/fonts'
 import { ScreenName } from '../../navigation/Screenname'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
-const ProfileScreen = ({navigation}: any) => {
+const ProfileScreen = ({ navigation }: any) => {
   const [showLogoutModal, setShowLogoutModal] = useState(false)
 
   const handleLogout = async () => {
@@ -21,7 +22,7 @@ const ProfileScreen = ({navigation}: any) => {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.headerContainer}>
         <View style={styles.headerLeft}>
           <HeaderComponent
@@ -32,38 +33,38 @@ const ProfileScreen = ({navigation}: any) => {
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
       </View>
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.menuItem}
         onPress={() => navigation.navigate(ScreenName.AudioRecording)}
       >
         <View style={styles.menuItemContent}>
-          <Image 
-            source={require('../../assets/icons/ic_microphone.png')} 
+          <Image
+            source={require('../../assets/icons/ic_microphone.png')}
             style={styles.menuIcon}
           />
           <Text style={styles.headerTextStyle}>Audio Recording</Text>
         </View>
-        <Image 
-          source={require('../../assets/icons/ic_right_arrow.png')} 
+        <Image
+          source={require('../../assets/icons/ic_right_arrow.png')}
           style={styles.arrowIcon}
         />
       </TouchableOpacity>
-      <TouchableOpacity 
-        style={[styles.menuItem,{
+      <TouchableOpacity
+        style={[styles.menuItem, {
           borderTopWidth: 1,
           borderTopColor: Colors.gray,
         }]}
         onPress={() => navigation.navigate(ScreenName.ManageNotifications)}
       >
         <View style={styles.menuItemContent}>
-          <Image 
-            source={require('../../assets/icons/ic_notification.png')} 
+          <Image
+            source={require('../../assets/icons/ic_notification.png')}
             style={styles.menuIcon}
           />
           <Text style={styles.headerTextStyle}>Manage Notifications</Text>
         </View>
-        <Image 
-          source={require('../../assets/icons/ic_right_arrow.png')} 
+        <Image
+          source={require('../../assets/icons/ic_right_arrow.png')}
           style={styles.arrowIcon}
         />
       </TouchableOpacity>
@@ -79,13 +80,13 @@ const ProfileScreen = ({navigation}: any) => {
             <Text style={styles.modalTitle}>Logout</Text>
             <Text style={styles.modalMessage}>Are you sure you want to logout?</Text>
             <View style={styles.modalButtonContainer}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.modalButtonNo}
                 onPress={() => setShowLogoutModal(false)}
               >
                 <Text style={styles.modalButtonNoText}>No</Text>
               </TouchableOpacity>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.modalButtonYes}
                 onPress={handleLogout}
               >
@@ -95,7 +96,7 @@ const ProfileScreen = ({navigation}: any) => {
           </View>
         </View>
       </Modal>
-    </View>
+    </SafeAreaView>
   )
 }
 
@@ -128,8 +129,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: 15,
-    // paddingHorizontal: 15,
-  
   },
   menuItemContent: {
     flexDirection: 'row',

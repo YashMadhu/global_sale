@@ -4,11 +4,6 @@ import productionItemsReducer from './reducer';
 import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import { persistReducer, persistStore } from 'redux-persist';
 
-// const rootReducer = combineReducers({productionItem: productionItemsReducer});
-// const store =  () => {
-//   return createStore(rootReducer);
-// };
-
 
 const rootReducer = combineReducers({
   notifications: notificationsReducer,
@@ -18,7 +13,6 @@ const rootReducer = combineReducers({
 const persistConfig = {
     key: 'root',
     storage: AsyncStorage,
-    // whitelist: ["userData", "permissions"] // only persist these reducers
   };
   
   const persistedReducer = persistReducer(persistConfig, rootReducer);

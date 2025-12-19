@@ -1,24 +1,25 @@
 import React, { useEffect, useMemo, useCallback, useState } from 'react'
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { useDispatch, useSelector } from 'react-redux'
 import HeaderComponent from '../../components/HeaderComponent'
 import Colors from '../../constants/Colors'
 import fonts from '../../assets/fonts'
 import { getData } from '../../services/apiServices'
 import { ENDPOINTS } from '../../services/apiEndPoints'
-import { showErrorToast } from '../../components/ToastMessage'
+import { showErrorToast, showSuccessToast } from '../../components/ToastMessage'
 import { RootState } from '../../redux/store'
 import { setNotificationList, toggleMainSwitch, toggleCheckbox } from '../../redux/actions'
-import ShimmerPlaceholder from 'react-native-shimmer-placeholder'
-import { LinearGradient } from 'react-native-svg'
+import SkeletonPlaceholder from 'react-native-skeleton-placeholder'
 
 const ManageNotificationsScreen = () => {
+
   const dispatch = useDispatch()
-  const notificationList = useSelector((state: any) => state?.notifications?.notificationList) || []
+
+  const notificationList = useSelector((state: RootState) => state?.notifications?.notificationList) || []
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
-    // Only call API if redux state is empty
     if (notificationList?.length === 0) {
       getNotifications()
     }
@@ -28,7 +29,6 @@ const ManageNotificationsScreen = () => {
     setIsLoading(true)
     getData(ENDPOINTS.notifications)
       .then((response) => {
-        console.log('response?.data', response?.data)
         dispatch(setNotificationList(response?.data || []))
         setIsLoading(false)
       })
@@ -38,21 +38,15 @@ const ManageNotificationsScreen = () => {
       })
   }
 
-  const renderShimmerItem = useMemo(() => () => (
-    <ShimmerPlaceholder
-      LinearGradient={LinearGradient}
-      style={styles.shimmerCard}
-      shimmerColors={['#E0E0E0', '#F5F5F5', '#E0E0E0']}
-    />
-  ), [])
-
   const handleMainToggle = useCallback((index: number, currentValue: boolean) => {
     dispatch(toggleMainSwitch(index, !currentValue))
+    showSuccessToast('Notification settings updated')
   }, [dispatch])
 
   const handleCheckboxToggle = useCallback((index: number, field: 'pushEnable' | 'emailEnable' | 'smsEnable', isEnabled: boolean) => {
-    if (!isEnabled) return // Don't allow toggle if main switch is off
+    if (!isEnabled) return
     dispatch(toggleCheckbox(index, field))
+    showSuccessToast('Notification settings updated')
   }, [dispatch])
 
   const memoizedNotificationList = useMemo(() => notificationList || [], [notificationList])
@@ -78,11 +72,11 @@ const ManageNotificationsScreen = () => {
         </View>
         <View style={styles.preferenceContainer}>
           <Text style={[styles.preferenceValue, !isEnabled && styles.textDisabled]}>
-            {item?.preference || item?.preferenceKey || 'N/A'}
+            {item?.preference}
           </Text>
         </View>
         <View style={styles.checkboxContainer}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.checkboxItem, !isEnabled && styles.checkboxDisabled]}
             onPress={() => handleCheckboxToggle(index, 'pushEnable', isEnabled)}
             disabled={!isEnabled}
@@ -95,7 +89,7 @@ const ManageNotificationsScreen = () => {
             />
             <Text style={[styles.checkboxLabel, !isEnabled && styles.textDisabled]}>Push</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.checkboxItem, !isEnabled && styles.checkboxDisabled]}
             onPress={() => handleCheckboxToggle(index, 'emailEnable', isEnabled)}
             disabled={!isEnabled}
@@ -108,7 +102,7 @@ const ManageNotificationsScreen = () => {
             />
             <Text style={[styles.checkboxLabel, !isEnabled && styles.textDisabled]}>Email</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.checkboxItem, !isEnabled && styles.checkboxDisabled]}
             onPress={() => handleCheckboxToggle(index, 'smsEnable', isEnabled)}
             disabled={!isEnabled}
@@ -127,18 +121,18 @@ const ManageNotificationsScreen = () => {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <HeaderComponent
         showBackButton
         title="Manage Notifications" />
       {isLoading ? (
-        <FlatList
-          data={[...Array(4).keys()]}
-          renderItem={renderShimmerItem}
-          keyExtractor={(item, index) => index.toString()}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.listContainer}
-        />
+        <SkeletonPlaceholder>
+          <View style={styles.shimmerListContainer}>
+            {[...Array(4).keys()].map((index) => (
+              <View key={index} style={styles.shimmerCard} />
+            ))}
+          </View>
+        </SkeletonPlaceholder>
       ) : (
         <FlatList
           data={memoizedNotificationList}
@@ -148,7 +142,7 @@ const ManageNotificationsScreen = () => {
           contentContainerStyle={styles.listContainer}
         />
       )}
-    </View>
+    </SafeAreaView>
   )
 }
 
@@ -193,7 +187,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 15,
+    paddingTop: 5,
   },
   preferenceLabel: {
     fontSize: 14,
@@ -203,7 +197,7 @@ const styles = StyleSheet.create({
   preferenceValue: {
     fontSize: 14,
     fontFamily: fonts.PlusJakartaSansMedium,
-    color: Colors.primary,
+    color: Colors.black,
   },
   textContainer: {
     flex: 1,
@@ -217,14 +211,14 @@ const styles = StyleSheet.create({
   descriptionText: {
     fontSize: 14,
     fontFamily: fonts.PlusJakartaSansRegular,
-    color: Colors.gray,
+    color: Colors.darkGray,
   },
   textDisabled: {
     color: '#A0A0A0',
   },
   toggleIcon: {
     width: 40,
-    height: 20,
+    height: 30,
     resizeMode: 'contain',
   },
   checkboxContainer: {
@@ -254,6 +248,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: fonts.PlusJakartaSansRegular,
     color: Colors.black,
+  },
+  shimmerListContainer: {
+    paddingTop: 20,
+    paddingBottom: 20,
   },
   shimmerCard: {
     height: 150,

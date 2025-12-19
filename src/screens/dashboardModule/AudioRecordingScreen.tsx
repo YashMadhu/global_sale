@@ -10,11 +10,13 @@ import {
   AppState,
   AppStateStatus
 } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import HeaderComponent from '../../components/HeaderComponent'
 import Colors from '../../constants/Colors'
 import fonts from '../../assets/fonts'
 import { showErrorToast, showSuccessToast } from '../../components/ToastMessage'
 import Sound, { RecordBackType, PlayBackType } from 'react-native-nitro-sound'
+import LottieView from 'lottie-react-native'
 
 type RecordingState = 'idle' | 'recording' | 'paused' | 'stopped' | 'saved'
 
@@ -27,6 +29,31 @@ const AudioRecordingScreen = () => {
   const [isPlaying, setIsPlaying] = useState(false)
   
   const appStateRef = useRef<AppStateStatus>(AppState.currentState)
+
+  const recordIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+const recordStartTimeRef = useRef<number>(0)
+const recordedDurationRef = useRef<number>(0)   // accumulated time (ms)
+
+
+const startRecordTimer = () => {
+  recordStartTimeRef.current = Date.now()
+
+  recordIntervalRef.current = setInterval(() => {
+    const totalElapsed =
+      recordedDurationRef.current +
+      (Date.now() - recordStartTimeRef.current)
+
+    setRecordTime(formatTime(totalElapsed))
+  }, 1000)
+}
+
+
+const stopRecordTimer = () => {
+  if (recordIntervalRef.current) {
+    clearInterval(recordIntervalRef.current)
+    recordIntervalRef.current = null
+  }
+}
 
   // Request microphone permission
   const requestMicrophonePermission = async (): Promise<boolean> => {
@@ -91,85 +118,112 @@ const AudioRecordingScreen = () => {
     return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
   }
 
-  // Start recording
+
   const startRecording = async () => {
     const permission = hasPermission || await requestMicrophonePermission()
     if (!permission) return
-
+  
     try {
-      // Set subscription duration for recording progress updates (in seconds)
-      await Sound.setSubscriptionDuration(0.1) // Update every 100ms
-      
-      // Set up recording progress listener
-      Sound.addRecordBackListener((e: RecordBackType) => {
-        console.log('Recording progress:', e.currentPosition)
-        setRecordTime(formatTime(e.currentPosition))
-      })
-
+      // FULL RESET FOR NEW RECORDING
+      stopRecordTimer()
+      recordedDurationRef.current = 0
+      recordStartTimeRef.current = 0
+  
+      setRecordTime('00:00:00')
+      setSavedRecordTime('00:00:00')
+  
       const result = await Sound.startRecorder()
-      console.log('Recording started:', result)
       setRecordedFilePath(result)
       setRecordingState('recording')
+  
+      // START TIMER
+      startRecordTimer()
+  
       showSuccessToast('Recording started')
     } catch (error) {
-      console.error('Failed to start recording:', error)
       showErrorToast('Failed to start recording')
     }
   }
+  
+  
 
   // Pause recording
   const pauseRecording = async () => {
     try {
+      // STORE ELAPSED TIME
+      recordedDurationRef.current += Date.now() - recordStartTimeRef.current
+  
+      stopRecordTimer()
       await Sound.pauseRecorder()
       setRecordingState('paused')
-      console.log('Recording paused')
     } catch (error) {
-      console.error('Failed to pause recording:', error)
       showErrorToast('Failed to pause recording')
     }
   }
+  
 
   // Resume recording
   const resumeRecording = async () => {
     try {
-      await Sound.resumeRecorder()
+      await Sound.resumeRecorder()   // resume native recorder FIRST
+      startRecordTimer()             // then restart timer
       setRecordingState('recording')
-      console.log('Recording resumed')
     } catch (error) {
-      console.error('Failed to resume recording:', error)
       showErrorToast('Failed to resume recording')
     }
   }
+  
+  
+  
 
   // Stop recording
   const stopRecording = async () => {
     try {
+      // ADD LAST SEGMENT
+      recordedDurationRef.current += Date.now() - recordStartTimeRef.current
+  
+      stopRecordTimer()
+  
       const result = await Sound.stopRecorder()
-      Sound.removeRecordBackListener()
-      console.log('Recording stopped:', result)
-      if (result) {
-        setRecordedFilePath(result)
-      }
+      setRecordedFilePath(result)
       setRecordingState('stopped')
+  
       showSuccessToast('Recording stopped')
     } catch (error) {
-      console.error('Failed to stop recording:', error)
       showErrorToast('Failed to stop recording')
-      setRecordingState('stopped')
     }
   }
+  
+  
 
   // Save recording
-  const saveRecording = () => {
-    try {
-      showSuccessToast('Recording saved')
-      setSavedRecordTime(recordTime)
-      setRecordingState('saved')
-    } catch (error) {
-      console.error('Failed to save recording:', error)
-      showErrorToast('Failed to save recording')
+ const saveRecording = async () => {
+  try {
+    let finalPath = recordedFilePath
+
+    // 🔥 CRITICAL FIX:
+    // If recording is still active, STOP it first
+    if (recordingState === 'recording' || recordingState === 'paused') {
+      stopRecordTimer()
+
+      const result = await Sound.stopRecorder()
+      Sound.removeRecordBackListener()
+
+      if (result) {
+        finalPath = result
+        setRecordedFilePath(result)
+      }
     }
+
+    setSavedRecordTime(recordTime)
+    setRecordingState('saved')
+    showSuccessToast('Recording saved')
+  } catch (error) {
+    console.error('Failed to save recording:', error)
+    showErrorToast('Failed to save recording')
   }
+}
+
 
   // Start new recording
   const startNewRecording = async () => {
@@ -181,7 +235,7 @@ const AudioRecordingScreen = () => {
       // Ignore
     }
     setRecordingState('idle')
-    setRecordTime('00:00:00')
+    // setRecordTime('00:00:00')
     setSavedRecordTime('00:00:00')
     setRecordedFilePath(null)
     setIsPlaying(false)
@@ -193,31 +247,39 @@ const AudioRecordingScreen = () => {
       showErrorToast('No recording available')
       return
     }
-
+  
     try {
-      console.log('Playing file:', recordedFilePath)
-      
-      // Set up playback progress listener
+      // 🛑 Stop & clean any previous player instance
+      await Sound.stopPlayer()
+      Sound.removePlayBackListener()
+  
+      // ✅ Ensure correct file URI
+      const filePath = recordedFilePath.startsWith('file://')
+        ? recordedFilePath
+        : `file://${recordedFilePath}`
+  
+      console.log('Playing file:', filePath)
+  
+      // Attach listener AFTER player is reset
       Sound.addPlayBackListener((e: PlayBackType) => {
-        console.log('Playback progress:', e.currentPosition, e.duration)
-        if (e.currentPosition >= e.duration) {
-          // Playback finished
-          console.log('Playback completed')
+        if (e.currentPosition >= e.duration && e.duration > 0) {
           setIsPlaying(false)
           Sound.stopPlayer()
           Sound.removePlayBackListener()
         }
       })
-
+  
       setIsPlaying(true)
-      const result = await Sound.startPlayer(recordedFilePath)
-      console.log('Playback started:', result)
+  
+      // ✅ Start player with valid URI
+      await Sound.startPlayer(filePath)
     } catch (error) {
       console.error('Failed to start playback:', error)
       showErrorToast('Failed to play recording')
       setIsPlaying(false)
     }
   }
+  
 
   // Stop playback
   const stopPlayback = async () => {
@@ -225,12 +287,11 @@ const AudioRecordingScreen = () => {
       await Sound.stopPlayer()
       Sound.removePlayBackListener()
       setIsPlaying(false)
-      console.log('Playback stopped')
-    } catch (error) {
-      console.error('Failed to stop playback:', error)
+    } catch (e) {
       setIsPlaying(false)
     }
   }
+  
 
   // Render bottom controls based on state
   const renderBottomControls = () => {
@@ -377,7 +438,7 @@ const AudioRecordingScreen = () => {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <HeaderComponent
         showBackButton
         title="Audio Recording" />
@@ -393,13 +454,22 @@ const AudioRecordingScreen = () => {
           <View style={[styles.outerRing, recordingState === 'recording' && styles.outerRingActive]}>
             <View style={[styles.middleRing, recordingState === 'recording' && styles.middleRingActive]}>
               <View style={styles.mainButton}>
-                <Image
-                  source={require('../../assets/icons/ic_microphone.png')}
-                  style={styles.microphoneIcon}
+                <LottieView
+                  source={require('../../assets/animation/recording.json')}
+                  autoPlay={recordingState === 'recording'}
+                  loop={recordingState === 'recording'}
+                  style={styles.lottieAnimation}
                 />
               </View>
             </View>
           </View>
+
+           {/* <LottieView
+                  source={require('../../assets/animation/recording.json')}
+                  autoPlay={recordingState === 'recording'}
+                  loop={recordingState === 'recording'}
+                  style={styles.lottieAnimation}
+                /> */}
         </TouchableOpacity>
 
         {/* Timer Display */}
@@ -413,7 +483,7 @@ const AudioRecordingScreen = () => {
         {/* Bottom Controls */}
         {renderBottomControls()}
       </View>
-    </View>
+    </SafeAreaView>
   )
 }
 
@@ -470,6 +540,10 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     tintColor: Colors.white,
+  },
+  lottieAnimation: {
+    width: 60,
+    height: 60,
   },
   timerText: {
     fontSize: 48,

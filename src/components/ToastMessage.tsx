@@ -39,8 +39,8 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   toastContentContainer: {
-    paddingHorizontal: 2,
-    paddingVertical: 8,
+    paddingHorizontal: 10, 
+    paddingVertical: 12,   
   },
   toastMessage: {
     fontSize: 14,
